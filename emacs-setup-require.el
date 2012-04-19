@@ -72,43 +72,51 @@ of s-expressions after the require statement is called."
           (setq load-path (cons dir-to-load load-path)))))
     el-dirs-list))
 
+(defun emacs-setup-load-package-el ()
+  "Returns the appropriate package.el."
+  (when (and emacs-setup-load-elpa
+             (not (string= "" emacs-setup-elpa-package-file))
+             (file-readable-p emacs-setup-elpa-package-file))
+      (load (expand-file-name emacs-setup-elpa-package-file)))
+  (fboundp 'package-initialize))
+
 (defun emacs-setup-require-packages ()
   "Loads the packages in emacs-setup-require-list, a list of cons cells with 
 the car being a string of the name of the packages and an optional cdr that is 
 any functions that need to run to accompany the package. Also loads elpa if
 user has that option set."
   (interactive)
-  (condition-case nil
-      (progn
-        ;; elpa
-        (when (and emacs-setup-load-elpa
-                   (load (expand-file-name emacs-setup-elpa-package-file)))
-          (package-initialize))
-        ;; required packages
-        (when (emacs-setup-thing-exists 'emacs-setup-require-list)
-          (let (invalid-packages)
-            (dolist (package emacs-setup-require-list)
-              (condition-case nil
-                  (unless (featurep (intern (car package)))
-                    (require (intern (car package)))
-                    (when (cdr package)
-                      (mapcar 'eval (cdr package))))
-                (error
-                 (setq invalid-packages
-                       (push (car package) invalid-packages)))))
-            (when invalid-packages
-              (get-buffer-create "*invalid-packages*")
-              (switch-to-buffer "*invalid-packages*")
-              (let ((package-names ""))
+  (let ((package-names ""))
+    (condition-case e
+        (progn
+          ;; elpa
+          (when (emacs-setup-load-package-el)
+            (package-initialize))
+          ;; required packages
+          (when (emacs-setup-thing-exists 'emacs-setup-require-list)
+            (let (invalid-packages)
+              (dolist (package emacs-setup-require-list)
+                (condition-case nil
+                    (unless (featurep (intern (car package)))
+                      (require (intern (car package)))
+                      (when (cdr package)
+                        (mapcar 'eval (cdr package))))
+                  (error
+                   (setq invalid-packages
+                         (push (car package) invalid-packages)))))
+              (when invalid-packages
+                (get-buffer-create "*invalid-packages*")
+                (switch-to-buffer "*invalid-packages*")
                 (dolist (package-name invalid-packages)
                   (setq package-names
                         (concat package-names package-name ", ")))
                 (setq package-names (substring package-names 0 -2))
                 (insert
                  (concat "These packages were not loaded: "
-                         package-names "\n")))))))
-    (error
-     (message "There was an error loading packages."))))
+                         package-names "\n"))))))
+      (error
+       (message "There was an error loading packages: %s" package-names)
+       (message "%s" (error-message-string e))))))
 
 (defun emacs-setup-add-feature ()
   "Adds an entry to emacs-setup-require-list."
