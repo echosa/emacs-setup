@@ -100,7 +100,7 @@ user has that option set."
                     (unless (featurep (intern (car package)))
                       (require (intern (car package)))
                       (when (cdr package)
-                        (mapcar 'eval (cdr package))))
+                        (mapc 'eval (cdr package))))
                   (error
                    (setq invalid-packages
                          (push (car package) invalid-packages)))))
