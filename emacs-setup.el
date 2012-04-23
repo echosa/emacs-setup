@@ -1,4 +1,4 @@
-;;; emacs-setup.el - Package for maintaining your emacs configuration. Clean up your .emacs!
+;;; emacs-setup.el --- Package for maintaining your emacs configuration. Clean up your .emacs!
 
 ;;; Commentary:
 
