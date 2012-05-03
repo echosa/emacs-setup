@@ -12,6 +12,16 @@
 ;; Emacs window/frame session setups (through the use of revive.el, included)
 ;; and more!
 
+;; Installation:
+
+;; The package can be installed with M-x package-list-packages (requires
+;; package.el, which is included for emacs 24 but availble for 23). The MELPA
+;; repository must be added to your packages setup first. Instructions can be found
+;; at http://melpa.milkbox.net/
+
+;; Alternatively, the source can be pulled direclty from github:
+;; https://github.com/echosa/emacs-setup
+
 ;; Usage:
 
 ;; In your .emacs, load emacs-setup:
