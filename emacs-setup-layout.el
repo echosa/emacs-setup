@@ -167,12 +167,13 @@ a string).  Otherwise, it will return the base value."
 Optional argument CONFIG Configuration to use."
   (interactive `(,(emacs-setup-prompt-for-configuration)))
   (let* ((config (or config (emacs-setup-get-default-frame-configuration)))
-         (config (rest (assoc config emacs-setup-frame-configurations)))
-         (main (first config))
-         (other (rest config)))
-    (emacs-setup-frame main)
-    (dolist (frame other)
-      (emacs-setup-frame frame t))))
+         (config (rest (assoc config emacs-setup-frame-configurations))))
+    (when config
+      (let ((main (first config))
+            (other (rest config)))
+        (emacs-setup-frame main)
+        (dolist (frame other)
+          (emacs-setup-frame frame t))))))
 
 (defun emacs-setup-frame (frame-layout-filename &optional make-frame)
   "Set up a single Emacs frame's layout.
