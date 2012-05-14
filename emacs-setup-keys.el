@@ -1,3 +1,11 @@
+;;; emacs-setup-keys.el --- Functions for handling key bindings in the emacs-setup package.
+
+;;; Commentary:
+;; This file contains the functions that allow the emacs-setup package to handle
+;; managing keybindings.
+
+;;; Code:
+
 ;;; **************
 ;;; CUSTOMIZATIONS
 ;;; **************
@@ -9,7 +17,7 @@
 (defcustom emacs-setup-keybindings nil
   "Alist where car is the function and cdr is the keybinding."
   :group 'emacs-setup-keys
-  :type '(alist :key-type (string :tag "Function: ") 
+  :type '(alist :key-type (string :tag "Function: ")
                 :value-type (string :tag "Keybinding: ")))
 
 ;;; *********
@@ -17,16 +25,20 @@
 ;;; *********
 
 (defun emacs-setup-bind-key-if-fboundp (key-cmd func)
- (when (fboundp func)
+  "Bind KEY-CMD to FUNC if FUNC is a bound function."
+  (when (fboundp func)
    (global-set-key key-cmd func)))
 
 (defun emacs-setup-bind-keys ()
+  "Bind all keys set in `emacs-setup-keybindings'."
   (dolist (binding emacs-setup-keybindings)
     (emacs-setup-bind-key-if-fboundp
      (read-kbd-macro (cdr binding))
      (intern (car binding)))))
 
 (defun emacs-setup-bind-key ()
+  "Interactively bind a key to a function.
+The binding is saved in `emacs-setup-keybindings'."
   (interactive)
   (let ((function (read-string "Function: "))
         (binding (read-key-sequence "Key binding: ")))
@@ -47,6 +59,7 @@
       (message "%s bound to %s" function (key-description binding)))))
 
 (defun emacs-setup-unbind-key-by-key ()
+  "Interactively unbind a key from `emacs-setup-keybindings'."
   (interactive)
   (let* ((binding (key-description (read-key-sequence "Key binding: ")))
          (function (key-binding (read-kbd-macro binding))))
@@ -55,6 +68,7 @@
       (emacs-setup-unbind-key binding function))))
 
 (defun emacs-setup-unbind-key-by-function ()
+  "Interactively unbind a function from `emacs-setup-keybindings'."
   (interactive)
   (let (functions)
     (dolist (key-binding emacs-setup-keybindings)
@@ -65,6 +79,9 @@
         (emacs-setup-unbind-key binding (intern function))))))
 
 (defun emacs-setup-unbind-key (binding function)
+  "Unbind a key and remove from `emacs-setup-keybindings'.
+Argument BINDING Key binding to unbind.
+Argument FUNCTION Funciton to unbind."
   (let ((bindings emacs-setup-keybindings))
     (if (or (not function)
             (not (member (cons (symbol-name function) binding) bindings)))
@@ -78,3 +95,5 @@
       (message "Unbound %s from %s" function binding))))
 
 (provide 'emacs-setup-keys)
+
+;;; emacs-setup-keys.el ends here

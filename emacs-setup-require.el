@@ -1,33 +1,43 @@
+;;; emacs-setup-require.el --- Functions for emacs-setup to manage requiring and loading pacakges.
+
+;;; Commentary:
+;; This file holds the functions for let emacs-setup handle loading and
+;; requiring packages.
+
 (require 'emacs-setup-util)
 
 ;;; **************
 ;;; CUSTOMIZATIONS
 ;;; **************
 
+;;; Code:
+
 (defgroup emacs-setup-require nil
   "Emacs setup layout customizations."
   :group 'emacs-setup)
 
 (defcustom emacs-setup-load-path-list nil
-  "This is a list of directory paths to add to the emacs load-path."
+  "This is a list of directory paths to add to the Emacs `load-path'."
   :group 'emacs-setup-require
   :type '(repeat :tag "Directory: " (directory)))
 
 (defcustom emacs-setup-env-path-list nil
-  "This is a list of directories to add to the emacs env PATH."
+  "This is a list of directories to add to the Emacs env PATH."
   :group 'emacs-setup-require
   :type '(repeat :tag "Directory: " (directory)))
 
 (defcustom emacs-setup-require-list nil
-  "Holds the names of all packages to be required, along with an optional list 
-of s-expressions after the require statement is called."
+  "Holds the names of all packages to be required.
+This is an alist where the key is the package name that should be passed to
+\(require) and the value is an optional list of s-expressions after the
+require statement is called."
   :group 'emacs-setup-require
-  :type '(alist :key-type (string :tag "Package Name: ") 
-                :value-type 
+  :type '(alist :key-type (string :tag "Package Name: ")
+                :value-type
                 (repeat :tag "Configuration Lines: " (sexp))))
 
 (defcustom emacs-setup-load-elpa nil
-  "If t, load elpa from emacs-setup-elpa-package-file."
+  "If t, load elpa from `emacs-setup-elpa-package-file'."
   :group 'emacs-setup-require
   :type 'boolean)
 
@@ -41,13 +51,16 @@ of s-expressions after the require statement is called."
 ;;; *********
 
 (defvar emacs-setup-ring nil
-  "Ring for emacs-setup.")
+  "Ring for `emacs-setup'.")
 
 ;;; *********
 ;;; FUNCTIONS
 ;;; *********
 
 (defun emacs-setup-load-recursive-el-directories (base-dir ignore-dirs)
+  "Recursively add all directories under BASE-DIR to the `load-path'.
+Argument BASE-DIR Base directory to add.
+Argument IGNORE-DIRS Directories to ignore (e.g. .git, .svn, etc)."
   (let ((el-dirs-list (list base-dir))
         (current-directory-list (directory-files-and-attributes base-dir t))
         (ignore-dirs (append ignore-dirs (list "." ".."))))
@@ -73,7 +86,7 @@ of s-expressions after the require statement is called."
     el-dirs-list))
 
 (defun emacs-setup-load-package-el ()
-  "Returns the appropriate package.el."
+  "Return the appropriate package.el."
   (when (and emacs-setup-load-elpa
              (not (string= "" emacs-setup-elpa-package-file))
              (file-readable-p emacs-setup-elpa-package-file))
@@ -81,9 +94,10 @@ of s-expressions after the require statement is called."
   (fboundp 'package-initialize))
 
 (defun emacs-setup-require-packages ()
-  "Loads the packages in emacs-setup-require-list, a list of cons cells with 
-the car being a string of the name of the packages and an optional cdr that is 
-any functions that need to run to accompany the package. Also loads elpa if
+  "Load the packages in `emacs-setup-require-list'.
+`emacs-setup-require-list' is a list of cons cells with
+the car being a string of the name of the packages and an optional cdr that is
+any functions that need to run to accompany the package.  Also loads elpa if
 user has that option set."
   (interactive)
   (let ((package-names ""))
@@ -119,7 +133,7 @@ user has that option set."
        (message "%s" (error-message-string e))))))
 
 (defun emacs-setup-add-feature ()
-  "Adds an entry to emacs-setup-require-list."
+  "Add an entry to `emacs-setup-require-list'."
   (interactive)
   (let ((feature (read-string "Require: "))
         config
@@ -137,6 +151,7 @@ user has that option set."
        (message "Added feature %s with configuration: %s" feature config)))))
 
 (defun emacs-setup-remove-feature ()
+  "Remove an entry from emacs-seutp-require-list."
   (interactive)
   (let (features)
     (dolist (feature emacs-setup-require-list)
@@ -153,3 +168,5 @@ user has that option set."
       (message "Removed feature: %s" feature))))
 
 (provide 'emacs-setup-require)
+
+;;; emacs-setup-require.el ends here

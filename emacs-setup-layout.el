@@ -1,52 +1,60 @@
+;;; emacs-setup-layout.el --- A collection of functions for handing layout in emacs-setup.
+
+;;; Commentary:
+;; This file has the functions needed to handle Emacs frame/window/buffer
+;; layout for emacs-setup.
+
 (require 'emacs-setup-util)
 
 ;;; **************
 ;;; CUSTOMIZATIONS
 ;;; **************
 
+;;; Code:
+
 (defgroup emacs-setup-layout nil
   "Emacs setup layout customizations."
   :group 'emacs-setup)
 
 (defcustom emacs-setup-set-frame-size nil
-  "Whether or not to set frame size when setting up emacs.
-Uses emacs-setup-frame-height and emacs-setup-frame-width."
+  "Whether or not to set frame size when setting up Emacs.
+Uses `emacs-setup-frame-height' and `emacs-setup-frame-width'."
   :group 'emacs-setup-layout
   :type 'boolean)
 
 (defcustom emacs-setup-frame-height 0
-  "Height, in rows, of the emacs frame after setup. 0 means don't set the 
-height."
+  "Height, in rows, of the Emacs frame after setup.
+0 means don't set the  height."
   :group 'emacs-setup-layout
   :type 'integer)
 
 (defcustom emacs-setup-frame-width 0
-  "Width, in rows, of the emacs frame after setup. 0 means don't set the width."
+  "Width, in rows, of the Emacs frame after setup.  0 means don't set the width."
   :group 'emacs-setup-layout
   :type 'integer)
 
 (defcustom emacs-setup-frames nil
-  "Whether or not to use emacs-setup-frame-configuration to setup frames."
+  "Whether or not to use `emacs-setup-frame-configuration' to setup frames."
   :group 'emacs-setup-layout
   :type 'boolean)
 
 (defcustom emacs-setup-frame-configurations nil
-  "Frame settings alist. First frame is the starting default frame."
+  "Frame settings alist.  First frame is the starting default frame."
   :group 'emacs-setup-layout
   :type '(alist :key-type (string :tag "Configuration Name: ")
                 :value-type (repeat :tag "Frame Layout: " (string))))
 
 (defcustom emacs-setup-default-frame-configuration nil
-  "Frame configuration to load if emacs-setup-frames is t.
+  "Frame configuration to load if variable `emacs-setup-frames' is t.
 This may also be the name of a function that returns a configuration
-name.  
+name.
 
 Example:
 
-\(defun emacs-setup-get-default-frame-configuration ()
+\(defun my-frame-configuration ()
   (cond ((= (x-display-pixel-width) 2560) \"Cinema Display\")
         ((string= system-name \"simon\") \"Dell 24\\\" Fullscreen\")
-        ((member system-name '(\"Book.local\" \"book.ehtech.in\")) 
+        ((member system-name '(\"Book.local\" \"book.ehtech.in\"))
          \"MacBook Pro Fullscreen\")
         (t \"Dell 24\\\"\")))"
   :group 'emacs-setup-layout
@@ -63,22 +71,22 @@ Example:
   :type 'boolean)
 
 (defcustom emacs-setup-fullscreen nil
-  "If t, make emacs fullscreen prior to loading layout (if set) using 
-`ns-toggle-fullscreen`."
+  "If t, make Emacs fullscreen prior to loading layout.
+This only has effect on Mac OS X Emacs with `ns-toggle-fullscreen`."
   :group 'emacs-setup-layout
   :type 'boolean)
 
 (defcustom emacs-setup-layout-buffer-list nil
-  "This is a list of buffer names to load in the windows setup by revive.el. 
-The order in which the list is entered is the order the buffers will be placed 
-in windows. For example, the second item in the list will be in the second 
+  "This is a list of buffer names to load in the windows setup by revive.el.
+The order in which the list is entered is the order the buffers will be placed
+in windows.  For example, the second item in the list will be in the second
 window."
   :group 'emacs-setup-layout
   :type '(alist :key-type (string :tag "Layout File: ")
                 :value-type (repeat :tag "Buffer Name: " (string))))
 
 (defcustom emacs-setup-load-window-number-mode nil
-  "If t, use window-number-mode."
+  "If t, use function `window-number-mode'."
   :group 'emacs-setup-layout
   :type 'boolean)
 
@@ -90,6 +98,9 @@ window."
 ;; LOADING
 ;; *******
 (defun emacs-setup-get-layout-filename ()
+  "Return the appropriate layout filename.
+The filename is generated based on the user's screen resolution and Emacs frame
+size."
   (let* ((screen-width (if (fboundp 'x-display-pixel-width)
                            (x-display-pixel-width)
                          (display-pixel-width)))
@@ -100,7 +111,7 @@ window."
          (top-pixel (if top-pixel (eval (cdr top-pixel)) 0))
          (left-pixel (assoc 'left (frame-parameters (selected-frame))))
          (left-pixel (if left-pixel (eval (cdr left-pixel)) 0)))
-    (concat (number-to-string screen-width) "-" 
+    (concat (number-to-string screen-width) "-"
             (number-to-string screen-height) "-"
             (number-to-string (frame-width)) "-"
             (number-to-string (frame-height)) "-"
@@ -108,11 +119,13 @@ window."
             (number-to-string left-pixel) ".el")))
 
 (defun emacs-setup-get-layout-file ()
+  "Return the appropriate layout file."
   (convert-standard-filename
    (concat
     emacs-setup-layout-dir "/" (emacs-setup-get-layout-filename))))
 
 (defun emacs-setup-layout ()
+  "Set up Emacs to the appropriate layout."
   (when emacs-setup-load-window-number-mode
     (unless (featurep 'window-number)
       (condition-case nil
@@ -125,11 +138,14 @@ window."
            emacs-setup-frame-configurations
            emacs-setup-default-frame-configuration)
       (emacs-setup-frames)
+    (message "doing it")
     (emacs-setup-set-frame-size)
-    (emacs-setup-windows)))
+    ;(emacs-setup-windows)
+))
 
 (defun emacs-setup-get-default-frame-configuration ()
-  "This function will check to see if the value of
+  "Return the appropriate frame configuration.
+This function will check to see if the value of
 ``emacs-setup-default-frame-configuration'' is a function.  If it
 is, it will evalulate the function and return its value (if it is
 a string).  Otherwise, it will return the base value."
@@ -140,14 +156,15 @@ a string).  Otherwise, it will return the base value."
       emacs-setup-default-frame-configuration)))
 
 (defun emacs-setup-prompt-for-configuration ()
-  "This function abstracts prompting for an emacs-setup frame
-configuration."
+  "Prompt for a frame configuration."
   (let ((default-config (emacs-setup-get-default-frame-configuration)))
     (completing-read (concat "Configuration (" default-config "): ")
                      (mapcar 'first emacs-setup-frame-configurations)
                      nil 'confirm-after-completion nil nil default-config)))
 
 (defun emacs-setup-frames (&optional config)
+  "Set up Emacs frames based on the appropriate configuration.
+Optional argument CONFIG Configuration to use."
   (interactive `(,(emacs-setup-prompt-for-configuration)))
   (let* ((config (or config (emacs-setup-get-default-frame-configuration)))
          (config (rest (assoc config emacs-setup-frame-configurations)))
@@ -158,6 +175,9 @@ configuration."
       (emacs-setup-frame frame t))))
 
 (defun emacs-setup-frame (frame-layout-filename &optional make-frame)
+  "Set up a single Emacs frame's layout.
+Argument FRAME-LAYOUT-FILENAME Filename for the frame layout.
+Optional argument MAKE-FRAME If a new frame should be made for the layout."
   (let* ((frame frame-layout-filename)
          (frame-info (split-string (substring frame 0 -3) "-" t))
          (frame-width (string-to-number (third frame-info)))
@@ -169,7 +189,7 @@ configuration."
                         (not (zerop (frame-parameter (selected-frame) 'top))))
                    (and (not (zerop frame-top))
                         (zerop (frame-parameter (selected-frame) 'top)))))
-      (ns-toggle-fullscreen))    
+      (ns-toggle-fullscreen))
     (if make-frame
         (select-frame (make-frame `((width . ,frame-width)
                                     (height . ,frame-height))))
@@ -178,32 +198,34 @@ configuration."
     (emacs-setup-windows)))
 
 (defun emacs-setup-windows ()
+  "Set up the windows in an Emacs frame."
   (when (and emacs-setup-load-layout
              (not (boundp 'aquamacs-version))
              (file-exists-p (emacs-setup-get-layout-file)))
     (emacs-setup-revive-resume (emacs-setup-get-layout-filename))
     (if (emacs-setup-thing-exists 'emacs-setup-layout-buffer-list)
-        (if (fboundp 'window-number-goto)
+        (if (fboundp 'window-number-select)
             (condition-case nil
                 (progn
                   (let ((window-count 1))
                     (dolist (window
                              (cdr (assoc (emacs-setup-get-layout-filename)
                                          emacs-setup-layout-buffer-list)))
-                      (window-number-goto window-count)
+                      (window-number-select window-count)
                       (switch-to-buffer window)
                       (setq window-count (1+ window-count)))
-                    (window-number-goto 1)))
+                    (window-number-select 1)))
               (error
                (message "Error setting up windows!")
                (delete-other-windows)
                (switch-to-buffer "*scratch*")))
           (message
-           "Not setting up windows: window-number-goto function not found."))
+           "Not setting up windows: window-number-select function not found."))
       (message
        "Not setting up windows: emacs-setup-layout-buffer-list not set."))))
 
 (defun emacs-setup-set-frame-size ()
+  "Set the size of an Emacs frame."
   (if (and emacs-setup-fullscreen
            (fboundp 'ns-toggle-fullscreen))
       (ns-toggle-fullscreen)
@@ -216,6 +238,8 @@ configuration."
         (set-frame-width (selected-frame) emacs-setup-frame-width)))))
 
 (defun emacs-setup-revive-resume (layout-file)
+  "Resume a layout from .revive.el via the revive package.
+Argument LAYOUT-FILE Layout file to copy to ~/.revive.el to load."
   (if (and (not (fboundp 'resume)) (not (require 'revive)))
       (message "Resume function not loaded. Please load revive.el.")
     (when (find-file (convert-standard-filename "~/.revive.el"))
@@ -236,10 +260,11 @@ configuration."
   (emacs-setup-save-frame-buffers))
 
 (defun emacs-setup-save-frame-configuration ()
+  "Save the current frame configuration."
   (interactive)
   (let* ((config-name (catch 'valid
                         (while t
-                          (let ((config-name 
+                          (let ((config-name
                                  (emacs-setup-prompt-for-configuration)))
                             (when (not (zerop (length config-name)))
                               (throw 'valid config-name))))))
@@ -263,6 +288,9 @@ configuration."
     (select-frame current-frame)))
     
 (defun emacs-setup-revive-save (layout-file)
+  "Save a .revive.el file to a custom file for the layout.
+The current .revive.el is backed up to .revive.el.bak first.
+Argument LAYOUT-FILE Name of file to save to."
   (if (not (fboundp 'save-current-configuration))
       (message "Save configuration function not loaded. Please load revive.el.")
     (when (find-file (convert-standard-filename "~/.revive.el"))
@@ -274,12 +302,13 @@ configuration."
     (kill-buffer)))
 
 (defun emacs-setup-save-frame-buffers ()
+  "Save the buffer list for the frame."
   (let* ((layout-buffer-list emacs-setup-layout-buffer-list)
          (this-buffer-list
           (assoc (emacs-setup-get-layout-filename) layout-buffer-list)))
     (when this-buffer-list
       (setq layout-buffer-list (remove this-buffer-list layout-buffer-list)))
-    (add-to-list 'layout-buffer-list 
+    (add-to-list 'layout-buffer-list
                  (cons (emacs-setup-get-layout-filename)
                        (emacs-setup-get-frame-buffers))
                  t)
@@ -288,19 +317,22 @@ configuration."
                              emacs-setup-layout-buffer-list)))
 
 (defun emacs-setup-get-frame-buffers ()
+  "Return and load buffers for the frame."
   (let (buffers
         (window-count 1)
         (current-window (window-number)))
     (condition-case nil
-        (while (window-number-goto window-count)
+        (while (window-number-select window-count)
           (setq buffers (append buffers (list (buffer-name))))
           (setq window-count (1+ window-count)))
       (error
        nil))
-    (window-number-goto current-window)
+    (window-number-select current-window)
     buffers))
 
 (defun emacs-setup-get-frame-info (&optional frame)
+  "Return certain information about the FRAME.
+Information returned includes name, size, and position."
   (unless frame
     (setq frame (selected-frame)))
   `(,(cdr (assoc 'name (frame-parameters frame))) .
@@ -310,3 +342,5 @@ configuration."
      ,(cdr (assoc 'width (frame-parameters frame))))))
 
 (provide 'emacs-setup-layout)
+
+;;; emacs-setup-layout.el ends here
