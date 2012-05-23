@@ -5,7 +5,7 @@ setup through emacs-setup:
 Directories to be added to the load path.
 Packages to require, and any setup elisp code.
 Keybindings.
-Emacs window/frame session setups (through the use of revive.el, included)
+Emacs window/frame session setups (through the use of revive.el)
 and more!
 
 Installation:
@@ -17,6 +17,10 @@ at http://melpa.milkbox.net/
 
 Alternatively, the source can be pulled direclty from github:
 https://github.com/echosa/emacs-setup
+
+If you install via package-list-packages, revive.el will be installed for you.
+If you do not, you will need to manually get, install, and load revive.el.
+You can find it at http://www.gentei.org/~yuuji/software/revive.el
 
 Usage:
 

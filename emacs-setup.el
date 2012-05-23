@@ -1,5 +1,7 @@
 ;;; emacs-setup.el --- Package for maintaining your emacs configuration. Clean up your .emacs!
 
+;; Package-Requires: ((revive "2.19"))
+
 ;;; Commentary:
 
 ;; emacs-setup is an emacs package that is meant to help make maintaining your
@@ -9,7 +11,7 @@
 ;; Directories to be added to the load path.
 ;; Packages to require, and any setup elisp code.
 ;; Keybindings.
-;; Emacs window/frame session setups (through the use of revive.el, included)
+;; Emacs window/frame session setups (through the use of revive.el)
 ;; and more!
 
 ;; Installation:
@@ -21,6 +23,10 @@
 
 ;; Alternatively, the source can be pulled direclty from github:
 ;; https://github.com/echosa/emacs-setup
+
+;; If you install via package-list-packages, revive.el will be installed for you.
+;; If you do not, you will need to manually get, install, and load revive.el.
+;; You can find it at http://www.gentei.org/~yuuji/software/revive.el
 
 ;; Usage:
 
