@@ -5,6 +5,9 @@
 ;; layout for emacs-setup.
 
 (require 'emacs-setup-util)
+(autoload 'save-current-configuration "revive" "Save status" t)
+(autoload 'resume "revive" "Resume Emacs" t)
+(autoload 'wipe "revive" "Wipe Emacs" t)
 
 ;;; **************
 ;;; CUSTOMIZATIONS
@@ -138,10 +141,8 @@ size."
            emacs-setup-frame-configurations
            emacs-setup-default-frame-configuration)
       (emacs-setup-frames)
-    (message "doing it")
     (emacs-setup-set-frame-size)
-    ;(emacs-setup-windows)
-))
+    (emacs-setup-windows)))
 
 (defun emacs-setup-get-default-frame-configuration ()
   "Return the appropriate frame configuration.

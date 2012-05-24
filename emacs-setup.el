@@ -184,13 +184,16 @@ after-make-frame-hook."
 
 (defun emacs-setup ()
   (interactive)
-  (emacs-setup-call-pre-sexp)
-  (emacs-setup-require-packages)
-  (emacs-setup-call-pre-layout-sexp)
-  (emacs-setup-layout)
-  (emacs-setup-call-post-sexp)
-  (emacs-setup-bind-keys)
-  (message "Setup complete. Emacs is ready to go!"))
+  (let (errorp)
+    (emacs-setup-call-pre-sexp)
+    (setq errorp (emacs-setup-require-packages))
+    (emacs-setup-call-pre-layout-sexp)
+    (emacs-setup-layout)
+    (emacs-setup-call-post-sexp)
+    (emacs-setup-bind-keys)
+    (if errorp
+        (message "Setup complete, with errors. Check the *Messages* buffer.")
+      (message "Setup complete. Emacs is ready to go!"))))
 
 (defun emacs-setup-call-base-sexp ()
   (dolist (sexp emacs-setup-base-sexp)

@@ -100,7 +100,7 @@ the car being a string of the name of the packages and an optional cdr that is
 any functions that need to run to accompany the package.  Also loads elpa if
 user has that option set."
   (interactive)
-  (let ((package-names ""))
+  (let ((failed ""))
     (condition-case e
         (progn
           ;; elpa
@@ -108,29 +108,18 @@ user has that option set."
             (package-initialize))
           ;; required packages
           (when (emacs-setup-thing-exists 'emacs-setup-require-list)
-            (let (invalid-packages)
-              (dolist (package emacs-setup-require-list)
-                (condition-case nil
-                    (unless (featurep (intern (car package)))
-                      (require (intern (car package)))
-                      (when (cdr package)
-                        (mapc 'eval (cdr package))))
-                  (error
-                   (setq invalid-packages
-                         (push (car package) invalid-packages)))))
-              (when invalid-packages
-                (get-buffer-create "*invalid-packages*")
-                (switch-to-buffer "*invalid-packages*")
-                (dolist (package-name invalid-packages)
-                  (setq package-names
-                        (concat package-names package-name ", ")))
-                (setq package-names (substring package-names 0 -2))
-                (insert
-                 (concat "These packages were not loaded: "
-                         package-names "\n"))))))
+            (dolist (package emacs-setup-require-list)
+              (let ((package-symbol (intern (car package))))
+                (unless (featurep package-symbol) (require package-symbol))
+                (if (featurep package-symbol)
+                    (when (cdr package) (mapc 'eval (cdr package)))
+                  (setq failed (concat failed (car package) " ")))))
+            (unless (string= "" failed)
+              (message (concat "Some packages were not loaded: " failed)))))
       (error
-       (message "There was an error loading packages: %s" package-names)
-       (message "%s" (error-message-string e))))))
+       (message "There was an error loading packages: %s" failed)
+       (message "%s" (error-message-string e))))
+    (not (string= "" failed))))
 
 (defun emacs-setup-add-feature ()
   "Add an entry to `emacs-setup-require-list'."
