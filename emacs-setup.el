@@ -83,19 +83,6 @@
 ;;                    to interactively bind or unbind keys, which are saved to
 ;;                    customize for you.
                    
-;; emacs-setup-layout - This part fo emacs-setup allows you to manage multiple
-;;                      screen layouts or sessions. Basic usage is to get your
-;;                      emacs frame(s)/window(s) like you want them, then run
-;;                      M-x emacs-setup-save-frame-configuration
-;;                      This will save all frame(s)/window(s) to a unique
-;;                      layout file recognized by your screen resolution and
-;;                      emacs frame size. This allows you have multiple
-;;                      layouts which will automatically load on different
-;;                      computers with different screen sizes.
-;;                      You can also set a default frame size, height, width,
-;;                      fullscreen, etc. all via customize.
-;;                      It is also possible to save/restore named layouts.
-                     
 ;; emacs-setup-require - This is ths part of emacs-setup where you can tell it
 ;;                       which packages to load, and give setup s-expressions.
 ;;                       You can customize the load-path and env-path, whether or
@@ -142,11 +129,6 @@
   :group 'emacs-setup
   :type '(repeat :tag "S-expression: " (sexp)))
 
-(defcustom emacs-setup-pre-layout-sexp nil
-  "List of function names to call during setup before any layout stuff is run."
-  :group 'emacs-setup
-  :type '(repeat :tag "S-expression: " (sexp)))
-
 (defcustom emacs-setup-post-sexp nil
   "List of function names to call after setup has loaded."
   :group 'emacs-setup
@@ -163,13 +145,13 @@ after-make-frame-hook."
               (find-lisp-object-file-name 'emacs-setup-base 'function))))
     (add-to-list 'load-path dir)
     (require 'emacs-setup-require)
-    (require 'emacs-setup-layout)
     (require 'emacs-setup-keys))
   (when the-custom-file
-    (setq custom-file the-custom-file))
-  (if custom-file
-      (load custom-file)
-    (error "No custom file set."))
+    (setq custom-file the-custom-file)
+    (load custom-file))
+  ;; (if custom-file
+  ;;     (load custom-file)
+  ;;   (error "No custom file set."))
   ;; This must come first for requires to work from here on out!
   (emacs-setup-load-recursive-el-directories
    emacs-setup-elisp-base-dir
@@ -187,8 +169,6 @@ after-make-frame-hook."
   (let (errorp)
     (emacs-setup-call-pre-sexp)
     (setq errorp (emacs-setup-require-packages))
-    (emacs-setup-call-pre-layout-sexp)
-    (emacs-setup-layout)
     (emacs-setup-call-post-sexp)
     (emacs-setup-bind-keys)
     (if errorp
@@ -201,10 +181,6 @@ after-make-frame-hook."
 
 (defun emacs-setup-call-pre-sexp ()
   (dolist (sexp emacs-setup-pre-sexp)
-    (eval sexp)))
-
-(defun emacs-setup-call-pre-layout-sexp ()
-  (dolist (sexp emacs-setup-pre-layout-sexp)
     (eval sexp)))
 
 (defun emacs-setup-call-post-sexp ()
