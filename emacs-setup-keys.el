@@ -6,6 +6,8 @@
 
 ;;; Code:
 
+(require 'cl)
+
 ;;; **************
 ;;; CUSTOMIZATIONS
 ;;; **************
@@ -40,23 +42,27 @@ The binding is saved in `emacs-setup-keybindings'."
             (equal function "keyboard-escape-quit"))
     (keyboard-quit))
   (while (and (not allow-override-p) (key-binding binding))
+    (when (or (equal binding "")
+              (equal function "keyboard-escape-quit"))
+      (keyboard-quit))
     (setq binding (read-key-sequence (concat
                                       (key-description binding) 
                                       " is already bound to "
                                       (symbol-name (key-binding binding))
                                       ". Choose another key binding: "))))
   (when (fboundp function)
-    (set-variable
-     'emacs-setup-keybindings
-     (remove (rassoc (key-description binding) emacs-setup-keybindings)
-             emacs-setup-keybindings))
-    (emacs-setup-custom-save
-     'emacs-setup-keybindings
-     (add-to-list 'emacs-setup-keybindings
-                  (cons (symbol-name function) (key-description binding))
-                  t))
     (global-set-key binding function)
-    (message "%s bound to %s" function (key-description binding))))
+    (when (called-interactively-p 'interactive)
+      (set-variable
+       'emacs-setup-keybindings
+       (remove (rassoc (key-description binding) emacs-setup-keybindings)
+               emacs-setup-keybindings))
+      (emacs-setup-custom-save
+       'emacs-setup-keybindings
+       (add-to-list 'emacs-setup-keybindings
+                    (cons (symbol-name function) (key-description binding))
+                    t))
+      (message "%s bound to %s" function (key-description binding)))))
 
 (defun emacs-setup-unbind-key-by-key ()
   "Interactively unbind a key from `emacs-setup-keybindings'."

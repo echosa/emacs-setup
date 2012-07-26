@@ -13,9 +13,8 @@
 (defun emacs-setup-custom-save (variable value)
   "Saves the VALUE into VARIABLE in customize and sets the value for the current
 running emacs."
-  (let ((var-symbol (make-symbol variable)))
-    (set-variable var-symbol value)
-    (customize-save-variable var-symbol variable)))
+  (set-variable variable value)
+  (customize-save-variable variable (eval variable)))
 
 (provide 'emacs-setup-util)
 

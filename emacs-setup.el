@@ -1,7 +1,5 @@
 ;;; emacs-setup.el --- Package for maintaining your emacs configuration. Clean up your .emacs!
 
-;; Package-Requires: ((revive "2.19"))
-
 ;;; Commentary:
 
 ;; emacs-setup is an emacs package that is meant to help make maintaining your
@@ -113,7 +111,7 @@
   :group 'emacs-setup
   :type '(file :must-match t))
 
-(defcustom emacs-setup-elisp-ignore-dirs (".svn" ".git")
+(defcustom emacs-setup-elisp-ignore-dirs '(".svn" ".git")
   "Sub-directories of emacs-setup-base-elisp-dir to ignore when loading 
 (i.e. .svn, .git, etc.)."
   :group 'emacs-setup
@@ -144,6 +142,7 @@ after-make-frame-hook."
   (let ((dir (file-name-directory 
               (find-lisp-object-file-name 'emacs-setup-base 'function))))
     (add-to-list 'load-path dir)
+    (message "Path: %s" 'load-path)
     (require 'emacs-setup-require)
     (require 'emacs-setup-keys))
   (when the-custom-file
@@ -174,6 +173,12 @@ after-make-frame-hook."
     (if errorp
         (message "Setup complete, with errors. Check the *Messages* buffer.")
       (message "Setup complete. Emacs is ready to go!"))))
+
+(defadvice custom-set-variables (after my-advice-custom-setup)
+  (emacs-setup-base)
+  (emacs-setup))
+
+(ad-activate 'custom-set-variables)
 
 (provide 'emacs-setup)
 
