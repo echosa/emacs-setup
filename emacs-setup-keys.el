@@ -54,6 +54,11 @@ The binding is saved in `emacs-setup-keybindings'."
                                         ". Choose another key binding: "))))
     (if (equal binding "")
         (message "Cannot rebind C-g.")
+      (let ((existing-binding (rassoc (key-description binding) emacs-setup-keybindings)))
+        (when existing-binding
+          (set-variable
+           'emacs-setup-keybindings
+           (remove existing-binding emacs-setup-keybindings))))
       (set-variable
        'emacs-setup-keybindings
        (add-to-list 'emacs-setup-keybindings
