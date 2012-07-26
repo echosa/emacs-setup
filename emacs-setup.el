@@ -6,11 +6,10 @@
 ;; emacs setup easier. Through the use of M-x customize, the following can be
 ;; setup through emacs-setup:
 
-;; Directories to be added to the load path.
-;; Packages to require, and any setup elisp code.
-;; Keybindings.
-;; Emacs window/frame session setups (through the use of revive.el)
-;; and more!
+;; Add/remove directories to the load path.
+;; Add/remove directories to the environment PATH.
+;; Add/remove packages to require, including any accompanying setup elisp code.
+;; Set/unset and save keybindings.
 
 ;; Installation:
 
@@ -31,20 +30,6 @@
 ;; In your .emacs, load emacs-setup:
 
 ;; (load-file "~/path/to/emacs-setup/emacs-setup.el")
-
-;; then run (emacs-setup-base), which takes two optional arguments:
-;;   FRAME - passed to after-make-frame-hook (typically nil)
-;;   THE-CUSTOM-FILE - if you store your file which is used by customize in a
-;;                     place other than default (e.g. I keep mine in Dropbox)
-;;                     you must specifiy that location here.
-
-;; (emacs-setup-base)
-;;  - or - 
-;; (emacs-setup-base nil "~/path/to/custom-file.el")
-
-;; finally, make a call to
-
-;; (emacs-setup)
 
 ;; Once loaded, you can use M-x customize-group emacs-setup to setup your
 ;; environment.
@@ -67,8 +52,6 @@
 ;;               run, it runs in this order:
 ;;               - emacs-setup-pre-sexp
 ;;               - require pacakges via emacs-setup-require
-;;               - emacs-setup-pre-layout-sexp
-;;               - setup layout - via emacs-setup-layout
 ;;               - emacs-setup-post-sexp
 ;;               - bind keys in emacs-setup-keys
 
@@ -135,20 +118,15 @@
 ;;; *********
 ;;; FUNCTIONS
 ;;; *********
-(defun emacs-setup-base (&optional frame the-custom-file)
+(defun emacs-setup-base (&optional frame)
   "Performs initial setup. The frame argument is there for 
 after-make-frame-hook."
   (interactive)
   (let ((dir (file-name-directory 
               (find-lisp-object-file-name 'emacs-setup-base 'function))))
     (add-to-list 'load-path dir)
-    (message "Path: %s" 'load-path)
     (require 'emacs-setup-require)
     (require 'emacs-setup-keys))
-  (when the-custom-file
-    (setq custom-file the-custom-file)
-    (load custom-file))
-  ;; This must come first for requires to work from here on out!
   (emacs-setup-load-recursive-el-directories
    emacs-setup-elisp-base-dir
    emacs-setup-elisp-ignore-dirs)

@@ -2,11 +2,10 @@ emacs-setup is an emacs package that is meant to help make maintaining your
 emacs setup easier. Through the use of M-x customize, the following can be
 setup through emacs-setup:
 
-Directories to be added to the load path.
-Packages to require, and any setup elisp code.
-Keybindings.
-Emacs window/frame session setups (through the use of revive.el)
-and more!
+Add/remove directories to the load path.
+Add/remove directories to the environment PATH.
+Add/remove packages to require, including any accompanying setup elisp code.
+Set/unset and save keybindings.
 
 Installation:
 
@@ -27,20 +26,6 @@ Usage:
 In your .emacs, load emacs-setup:
 
 (load-file "~/path/to/emacs-setup/emacs-setup.el")
-
-then run (emacs-setup-base), which takes two optional arguments:
-  FRAME - passed to after-make-frame-hook (typically nil)
-  THE-CUSTOM-FILE - if you store your file which is used by customize in a
-                    place other than default (e.g. I keep mine in Dropbox)
-                    you must specifiy that location here.
-
-(emacs-setup-base)
- - or - 
-(emacs-setup-base nil "~/path/to/custom-file.el")
-
-finally, make a call to
-
-(emacs-setup)
 
 Once loaded, you can use M-x customize-group emacs-setup to setup your
 environment.
@@ -63,8 +48,6 @@ emacs-setup - This is the main part of emacs-setup. You can set your base
               run, it runs in this order:
               - emacs-setup-pre-sexp
               - require pacakges via emacs-setup-require
-              - emacs-setup-pre-layout-sexp
-              - setup layout - via emacs-setup-layout
               - emacs-setup-post-sexp
               - bind keys in emacs-setup-keys
 
@@ -77,19 +60,6 @@ emacs-setup-keys - This part of emacs-setup allows you to have your keybindings
                    to interactively bind or unbind keys, which are saved to
                    customize for you.
                    
-emacs-setup-layout - This part fo emacs-setup allows you to manage multiple
-                     screen layouts or sessions. Basic usage is to get your
-                     emacs frame(s)/window(s) like you want them, then run
-                     M-x emacs-setup-save-frame-configuration
-                     This will save all frame(s)/window(s) to a unique
-                     layout file recognized by your screen resolution and
-                     emacs frame size. This allows you have multiple
-                     layouts which will automatically load on different
-                     computers with different screen sizes.
-                     You can also set a default frame size, height, width,
-                     fullscreen, etc. all via customize.
-                     It is also possible to save/restore named layouts.
-                     
 emacs-setup-require - This is ths part of emacs-setup where you can tell it
                       which packages to load, and give setup s-expressions.
                       You can customize the load-path and env-path, whether or
