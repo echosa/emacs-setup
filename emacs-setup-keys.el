@@ -24,87 +24,72 @@
 ;;; FUNCTIONS
 ;;; *********
 
-(defun emacs-setup-bind-key-if-fboundp (key-cmd func)
-  "Bind KEY-CMD to FUNC if FUNC is a bound function."
-  (when (fboundp func)
-   (global-set-key key-cmd func)))
-
 (defun emacs-setup-bind-keys ()
   "Bind all keys set in `emacs-setup-keybindings'."
   (dolist (binding emacs-setup-keybindings)
-    (emacs-setup-bind-key-if-fboundp
+    (emacs-setup-bind-key
+     (intern (car binding))
      (read-kbd-macro (cdr binding))
-     (intern (car binding)))))
+     t)))
 
-(defun emacs-setup-bind-key (allow-override-p)
+(defun emacs-setup-bind-key (function binding &optional allow-override-p)
   "Interactively bind a key to a function.
 The binding is saved in `emacs-setup-keybindings'."
-  (interactive "P")
-  (let ((function (read-string "Function: "))
-        (binding (read-key-sequence "Key binding: ")))
-    (when (equal binding "")
-      (keyboard-quit))
-    (while (and (not allow-override-p) (key-binding binding))
-      (when (equal binding "")
-        (keyboard-quit))
-      (setq binding (read-key-sequence (concat
-                                        (key-description binding) 
-                                        " is already bound to "
-                                        (symbol-name (key-binding binding))
-                                        ". Choose another key binding: "))))
-    (if (equal binding "")
-        (message "Cannot rebind C-g.")
-      (let ((existing-binding (rassoc (key-description binding) emacs-setup-keybindings)))
-        (when existing-binding
-          (set-variable
-           'emacs-setup-keybindings
-           (remove existing-binding emacs-setup-keybindings))))
-      (set-variable
-       'emacs-setup-keybindings
-       (add-to-list 'emacs-setup-keybindings
-                    (cons function (key-description binding))
-                    t))
-      (customize-save-variable 'emacs-setup-keybindings
-                               emacs-setup-keybindings)
-      (emacs-setup-bind-key-if-fboundp binding (intern function))
-      (message "%s bound to %s" function (key-description binding)))))
+  (interactive "aFunction: \nkKey binding: \nP")
+  (when (or (equal binding "")
+            (equal function "keyboard-escape-quit"))
+    (keyboard-quit))
+  (while (and (not allow-override-p) (key-binding binding))
+    (setq binding (read-key-sequence (concat
+                                      (key-description binding) 
+                                      " is already bound to "
+                                      (symbol-name (key-binding binding))
+                                      ". Choose another key binding: "))))
+  (when (fboundp function)
+    (set-variable
+     'emacs-setup-keybindings
+     (remove (rassoc (key-description binding) emacs-setup-keybindings)
+             emacs-setup-keybindings))
+    (emacs-setup-custom-save
+     'emacs-setup-keybindings
+     (add-to-list 'emacs-setup-keybindings
+                  (cons (symbol-name function) (key-description binding))
+                  t))
+    (global-set-key binding function)
+    (message "%s bound to %s" function (key-description binding))))
 
 (defun emacs-setup-unbind-key-by-key ()
   "Interactively unbind a key from `emacs-setup-keybindings'."
   (interactive)
-  (let* ((binding (key-description (read-key-sequence "Key binding: ")))
-         (function (key-binding (read-kbd-macro binding))))
-    (if (equal binding "C-g")
-        (message "Cannot unbind C-g.")
-      (emacs-setup-unbind-key binding function))))
+  (let ((binding (read-key-sequence "Key binding: ")))
+    (unless (equal binding "")
+      (emacs-setup-unbind-key :binding binding))))
 
 (defun emacs-setup-unbind-key-by-function ()
   "Interactively unbind a function from `emacs-setup-keybindings'."
   (interactive)
-  (let (functions)
-    (dolist (key-binding emacs-setup-keybindings)
-      (add-to-list 'functions (car key-binding)))
-    (let* ((function (completing-read "Function: " functions nil t))
-           (binding (cdr (assoc function emacs-setup-keybindings))))
-      (unless (equal function "keyboard-escape-quit")
-        (emacs-setup-unbind-key binding (intern function))))))
+  (let ((function (completing-read "Function: "
+                                   (mapcar 'car emacs-setup-keybindings)
+                                   nil t)))
+    (unless (equal function "keyboard-escape-quit")
+      (emacs-setup-unbind-key :function function))))
 
-(defun emacs-setup-unbind-key (binding function)
+(defun* emacs-setup-unbind-key (&key binding function)
   "Unbind a key and remove from `emacs-setup-keybindings'.
 Argument BINDING Key binding to unbind.
 Argument FUNCTION Funciton to unbind."
-  (let ((bindings emacs-setup-keybindings))
-    (if (or (not function)
-            (not (member (cons (symbol-name function) binding) bindings)))
-        (message "No emacs-setup binding set for %s" binding)
-      (setq bindings (delete (cons (symbol-name function) binding) bindings))
-      (set-variable 'emacs-setup-keybindings bindings)
-      (customize-save-variable
+  (let ((bind-cons
+         (if binding
+             (rassoc (key-description binding) emacs-setup-keybindings)
+           (when function
+             (assoc function emacs-setup-keybindings)))))
+    (when bind-cons
+      (global-unset-key (read-kbd-macro (cdr bind-cons)))
+      (emacs-setup-custom-save
        'emacs-setup-keybindings
-       emacs-setup-keybindings)
-      (global-unset-key (read-kbd-macro binding))
-      (message "Unbound %s from %s" function binding))))
-
+       (remove bind-cons emacs-setup-keybindings))
+      (message "Unbound %s from %s" (car bind-cons) (cdr bind-cons)))))
+                       
 (provide 'emacs-setup-keys)
 
 ;;; emacs-setup-keys.el ends here

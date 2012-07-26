@@ -113,9 +113,9 @@
   :group 'emacs-setup
   :type '(file :must-match t))
 
-(defcustom emacs-setup-elisp-ignore-dirs nil
+(defcustom emacs-setup-elisp-ignore-dirs (".svn" ".git")
   "Sub-directories of emacs-setup-base-elisp-dir to ignore when loading 
-(i.e. .svn, etc.)."
+(i.e. .svn, .git, etc.)."
   :group 'emacs-setup
   :type '(repeat :tag "Sub-directory name: " (string)))
 
@@ -149,9 +149,6 @@ after-make-frame-hook."
   (when the-custom-file
     (setq custom-file the-custom-file)
     (load custom-file))
-  ;; (if custom-file
-  ;;     (load custom-file)
-  ;;   (error "No custom file set."))
   ;; This must come first for requires to work from here on out!
   (emacs-setup-load-recursive-el-directories
    emacs-setup-elisp-base-dir
@@ -162,30 +159,21 @@ after-make-frame-hook."
     (dolist (dir emacs-setup-env-path-list)
       (setq env-path (concat dir ":" env-path)))
     (setenv "PATH" env-path))
-  (emacs-setup-call-base-sexp))
+  (dolist (sexp emacs-setup-base-sexp)
+    (eval sexp)))
 
 (defun emacs-setup ()
   (interactive)
   (let (errorp)
-    (emacs-setup-call-pre-sexp)
+    (dolist (sexp emacs-setup-pre-sexp)
+      (eval sexp))
     (setq errorp (emacs-setup-require-packages))
-    (emacs-setup-call-post-sexp)
+    (dolist (sexp emacs-setup-post-sexp)
+      (eval sexp))
     (emacs-setup-bind-keys)
     (if errorp
         (message "Setup complete, with errors. Check the *Messages* buffer.")
       (message "Setup complete. Emacs is ready to go!"))))
-
-(defun emacs-setup-call-base-sexp ()
-  (dolist (sexp emacs-setup-base-sexp)
-    (eval sexp)))
-
-(defun emacs-setup-call-pre-sexp ()
-  (dolist (sexp emacs-setup-pre-sexp)
-    (eval sexp)))
-
-(defun emacs-setup-call-post-sexp ()
-  (dolist (sexp emacs-setup-post-sexp)
-    (eval sexp)))
 
 (provide 'emacs-setup)
 
