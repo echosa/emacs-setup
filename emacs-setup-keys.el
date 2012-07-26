@@ -36,16 +36,22 @@
      (read-kbd-macro (cdr binding))
      (intern (car binding)))))
 
-(defun emacs-setup-bind-key ()
+(defun emacs-setup-bind-key (allow-override-p)
   "Interactively bind a key to a function.
 The binding is saved in `emacs-setup-keybindings'."
-  (interactive)
+  (interactive "P")
   (let ((function (read-string "Function: "))
         (binding (read-key-sequence "Key binding: ")))
-    (while (key-binding binding)
+    (when (equal binding "")
+      (keyboard-quit))
+    (while (and (not allow-override-p) (key-binding binding))
       (when (equal binding "")
         (keyboard-quit))
-      (setq binding (read-key-sequence (concat binding " is already bound to " (symbol-name (key-binding binding)) ". Choose another key binding: "))))
+      (setq binding (read-key-sequence (concat
+                                        (key-description binding) 
+                                        " is already bound to "
+                                        (symbol-name (key-binding binding))
+                                        ". Choose another key binding: "))))
     (if (equal binding "")
         (message "Cannot rebind C-g.")
       (set-variable
