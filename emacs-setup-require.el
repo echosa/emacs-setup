@@ -60,7 +60,7 @@ require statement is called."
   (add-to-list 'load-path emacs-setup-require-base-dir)
   (let ((default-directory emacs-setup-require-base-dir))
     (normal-top-level-add-subdirs-to-load-path))
-  (add-to-list 'load-path emacs-setup-load-path-list)
+  (mapc (lambda (x) (add-to-list 'load-path x)) emacs-setup-load-path-list)
   (setenv "PATH" (mapconcat 'concat
                             (append emacs-setup-env-path-list
                                     (list (getenv "PATH")))
