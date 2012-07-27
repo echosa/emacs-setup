@@ -21,12 +21,6 @@
   :group 'emacs-setup-require
   :type '(file :must-match t))
 
-(defcustom emacs-setup-require-ignore-dirs '(".svn" ".git")
-  "Sub-directories of emacs-setup-base-elisp-dir to ignore when loading 
-(i.e. .svn, .git, etc.)."
-  :group 'emacs-setup-require
-  :type '(repeat :tag "Sub-directory name: " (string)))
-
 (defcustom emacs-setup-load-path-list nil
   "This is a list of directory paths to add to the Emacs `load-path'."
   :group 'emacs-setup-require
@@ -74,7 +68,8 @@ require statement is called."
 
 (defun emacs-setup-load-package-el ()
   "Return the appropriate package.el."
-  (when (and emacs-setup-load-elpa
+  (when (and (not (fboundp 'package-initialize))
+             emacs-setup-load-elpa
              (not (string= "" emacs-setup-elpa-package-file))
              (file-readable-p emacs-setup-elpa-package-file))
       (load (expand-file-name emacs-setup-elpa-package-file)))
@@ -87,61 +82,48 @@ the car being a string of the name of the packages and an optional cdr that is
 any functions that need to run to accompany the package.  Also loads elpa if
 user has that option set."
   (interactive)
-  (let ((failed ""))
-    (condition-case e
-        (progn
-          ;; elpa
-          (when (emacs-setup-load-package-el)
-            (package-initialize))
-          ;; required packages
-          (when (emacs-setup-thing-exists 'emacs-setup-require-list)
-            (dolist (package emacs-setup-require-list)
-              (let ((package-symbol (intern (car package))))
-                (unless (featurep package-symbol) (require package-symbol))
-                (if (featurep package-symbol)
-                    (when (cdr package) (mapc 'eval (cdr package)))
-                  (setq failed (concat failed (car package) " ")))))
-            (unless (string= "" failed)
-              (message (concat "Some packages were not loaded: " failed)))))
-      (error
-       (message "There was an error loading packages: %s" failed)
-       (message "%s" (error-message-string e))))
-    (not (string= "" failed))))
+  ;; elpa
+  (when (emacs-setup-load-package-el)
+    (package-initialize))
+  (let (failed)
+    (mapc (lambda (package)
+            (let ((package-symbol (intern (car package))))
+              (condition-case e
+                  (progn
+                    (require package-symbol)
+                    (unless (featurep package-symbol)
+                      (error "Package not loaded."))
+                    (mapc 'eval (cdr package)))
+                (error
+                 (setq failed t)
+                 (message "There was an error loading package: %s\n%s"
+                          (car package) (error-message-string e))))))
+          emacs-setup-require-list)
+    failed))
 
-(defun emacs-setup-add-feature ()
+(defun emacs-setup-add-feature (feature)
   "Add an entry to `emacs-setup-require-list'."
-  (interactive)
-  (let ((feature (read-string "Require: "))
-        config
-        sexp)
+  (interactive "sRequire: ")
+  (let (config)
     (condition-case nil
-        (while (setq sexp (read-from-minibuffer "s-expression: " nil nil t))
-          (add-to-list 'config sexp))
+        (while (add-to-list 'config (read-from-minibuffer "s-expression: " nil nil t))
+          t)
       ;; we catch error to signify no s-expression was entered
       (error
-       (set-variable
+       (emacs-setup-custom-save
         'emacs-setup-require-list
         (add-to-list 'emacs-setup-require-list (cons feature config) t))
-       (customize-save-variable 'emacs-setup-require-list
-                                emacs-setup-require-list)
        (message "Added feature %s with configuration: %s" feature config)))))
 
-(defun emacs-setup-remove-feature ()
+(defun emacs-setup-remove-feature (feature)
   "Remove an entry from emacs-seutp-require-list."
-  (interactive)
-  (let (features)
-    (dolist (feature emacs-setup-require-list)
-      (add-to-list 'features (car feature)))
-    (let* ((feature (completing-read "Feature: " features nil t)))
-      (setq features
-            (delete (cons feature
-                          (cdr (assoc feature emacs-setup-require-list)))
-                    emacs-setup-require-list))
-      (set-variable 'emacs-setup-require-list features)
-      (customize-save-variable
-       'emacs-setup-require-list
-       emacs-setup-require-list)
-      (message "Removed feature: %s" feature))))
+  (interactive (list (completing-read "Feature: " 
+                                  (mapcar 'car emacs-setup-require-list)
+                                  nil t)))
+  (emacs-setup-custom-save 'emacs-setup-require-list
+                           (remove (assoc feature emacs-setup-require-list)
+                                   emacs-setup-require-list))
+  (message "Removed feature: %s" feature))
 
 (provide 'emacs-setup-require)
 
