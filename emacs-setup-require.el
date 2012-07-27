@@ -16,6 +16,17 @@
   "Emacs setup layout customizations."
   :group 'emacs-setup)
 
+(defcustom emacs-setup-require-base-dir "~/.emacs.d"
+  "Base directory where you keep your .el files to be loaded."
+  :group 'emacs-setup-require
+  :type '(file :must-match t))
+
+(defcustom emacs-setup-require-ignore-dirs '(".svn" ".git")
+  "Sub-directories of emacs-setup-base-elisp-dir to ignore when loading 
+(i.e. .svn, .git, etc.)."
+  :group 'emacs-setup-require
+  :type '(repeat :tag "Sub-directory name: " (string)))
+
 (defcustom emacs-setup-load-path-list nil
   "This is a list of directory paths to add to the Emacs `load-path'."
   :group 'emacs-setup-require
@@ -47,43 +58,19 @@ require statement is called."
   :type 'file)
 
 ;;; *********
-;;; VARIABLES
-;;; *********
-
-(defvar emacs-setup-ring nil
-  "Ring for `emacs-setup'.")
-
-;;; *********
 ;;; FUNCTIONS
 ;;; *********
 
-(defun emacs-setup-load-recursive-el-directories (base-dir ignore-dirs)
-  "Recursively add all directories under BASE-DIR to the `load-path'.
-Argument BASE-DIR Base directory to add.
-Argument IGNORE-DIRS Directories to ignore (e.g. .git, .svn, etc)."
-  (let ((el-dirs-list (list base-dir))
-        (current-directory-list (directory-files-and-attributes base-dir t))
-        (ignore-dirs (append ignore-dirs (list "." ".."))))
-    (while current-directory-list
-      (cond
-       ;; check whether filename is that of a directory
-       ((eq t (car (cdr (car current-directory-list))))
-        (unless (member
-                 (file-name-nondirectory (car (car current-directory-list)))
-                 ignore-dirs)
-          (setq el-dirs-list
-                (cons (car (car current-directory-list)) el-dirs-list))
-          (setq el-dirs-list
-                (append
-                 (emacs-setup-load-recursive-el-directories
-                  (car (car current-directory-list)) ignore-dirs)
-                 el-dirs-list)))))
-      (setq current-directory-list (cdr current-directory-list)))
-    (dolist (el-dir el-dirs-list)
-      (let ((dir-to-load (file-name-as-directory el-dir)))
-        (unless (member dir-to-load load-path)
-          (setq load-path (cons dir-to-load load-path)))))
-    el-dirs-list))
+(defun emacs-setup-require-set-paths ()
+  "Set up the load-path and PATH."
+  (add-to-list 'load-path emacs-setup-require-base-dir)
+  (let ((default-directory emacs-setup-require-base-dir))
+    (normal-top-level-add-subdirs-to-load-path))
+  (add-to-list 'load-path emacs-setup-load-path-list)
+  (setenv "PATH" (mapconcat 'concat
+                            (append emacs-setup-env-path-list
+                                    (list (getenv "PATH")))
+                            ":")))
 
 (defun emacs-setup-load-package-el ()
   "Return the appropriate package.el."
